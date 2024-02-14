@@ -1,0 +1,12 @@
+name: jecp_tay2024
+title: jecp_tay2024
+username: cleotay
+account: cleotay
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 10842971
+bundleId: 8211295
+url: https://cleotay.shinyapps.io/jecp_tay2024/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

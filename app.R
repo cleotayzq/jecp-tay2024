@@ -26,6 +26,14 @@ dropdown_choices <- list(
 continuous_vars <- c("ageMonths", "bds", "tom_2orderTotal", "tom_2orderBelief", "tomR_KnowWant",
                      "SC_total", "SC_thinkTotal", "SC_sayTotal")
 
+sidebarPanel2 <- function (..., out = NULL, width = 4) 
+{
+  div(class = paste0("col-sm-", width), 
+      tags$form(class = "well", ...),
+      out
+  )
+}
+
 # application UI ----
 ui <- tagList(
   tags$head(
@@ -44,13 +52,14 @@ ui <- tagList(
              height: 30px; /* Set the fixed height of the footer here */
              text-align: right;
              padding-top: 10px;
+             font-size: 90%;
            }")),
     tags$link(
       rel = "stylesheet",
       href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css",
       crossorigin = "anonymous"
     )
-    ),
+  ),
   
   fluidPage(
   
@@ -65,7 +74,11 @@ ui <- tagList(
         ),
       tags$span(
         style = "font-weight: normal; font-size: 80%",
-        "an interactive data visualization accompaniment to Tay et al. (2024)"
+        "an interactive data visualization accompaniment to",
+        tags$a(
+          "Tay et al. (2024)",
+          href="https://doi.org/10.1016/j.jecp.2024.105863"
+        )
       )
     )
   ),
@@ -74,7 +87,7 @@ ui <- tagList(
   sidebarLayout(
     
     # sidebar panel ----
-    sidebarPanel(
+    sidebarPanel2(
       
       # both
       radioGroupButtons(
@@ -140,6 +153,17 @@ ui <- tagList(
           choices = dropdown_choices,
           selected = "bds"
         )
+      ),
+      out = tags$div(
+        style = "font-size: 90%; text-indent: -30px; padding-left: 35px; padding-right: 5px;",
+        tags$strong("Reference:"),
+        tags$p(
+          "Tay, C., Ng, R., Ye, N. N., & Ding, X. P. (2024). Detecting lies through others’ eyes: Children use perceptual access cues to evaluate listeners’ beliefs about informants’ deception.",
+          tags$em("Journal of Experimental Child Psychology, 241,"),
+          "105863.",
+          tags$a("https://doi.org/10.1016/j.jecp.2024.105863",
+               href = "https://doi.org/10.1016/j.jecp.2024.105863")
+        )
       )
     ),
     
@@ -202,9 +226,9 @@ ui <- tagList(
     )
   ),
   tags$footer(
-    HTML("Last updated: Dec '23 | R Shiny Code:&nbsp;"),
+    HTML("<i>Last updated: Feb '24 | R Shiny Code:</i>&nbsp;"),
     a(
-      href = "https://github.com/your-username/your-repo",
+      href = "https://github.com/cleotayzq/jecp-tay2024",
       target = "_blank",
       HTML('<i class="fab fa-github"></i>')
     ),
@@ -237,10 +261,10 @@ server <- function(input, output, session) {
   
   # if x_axis and y_axis are the same, update y_axis to a random variable
   observe({
-    if (!is.null(input$y_axis) && !is.null(input$x_axis) && input$y_axis == input$x_axis) {
+    if (input$tabName == "Covariates" && input$y_axis == input$x_axis) {
       new_y_axis <- sample(setdiff(unlist(dropdown_choices, recursive = TRUE), input$x_axis), 1)
       updatePickerInput(session, "y_axis", selected = new_y_axis)
-      shinyalert("The x-axis variable is the same as y-axis variable!", "Picking a random variable for the y-axis...", type = "warning")
+      shinyalert("The x-axis variable is the same as the y-axis variable!", "Picking a random variable for the y-axis...", type = "warning")
     }
   })
   
@@ -307,8 +331,8 @@ server <- function(input, output, session) {
                    names_to = c("expt_cond", ".value")) %>%
       na.omit() %>%
       mutate_all(as.factor) %>%
-      mutate(expt_cond = ifelse(expt_cond == "exptNP", "Ignorant Receiver (Did Not Peek)",
-                                "Knowledgeable Receiver (Peeked)"))
+      mutate(expt_cond = ifelse(expt_cond == "exptNP", "Ignorant Receiver\n(Did Not Peek)",
+                                "Knowledgeable Receiver\n(Peeked)"))
     return(long_data)
   })
   
@@ -326,15 +350,16 @@ server <- function(input, output, session) {
                  label.size = NA, show.legend = F) +
       scale_y_continuous(name = "Proportion", labels = function(x) paste0(x*100, "%")) +
       theme_bw() +
-      labs(fill = "Does [the receiver] think that [the informant] is lying or telling the truth?") +
+      labs(fill = stringr::str_wrap("Does [the receiver] think that\n[the informant] is lying or telling the truth?\n")) +
       xlab(x_axis_label()) +
       theme(legend.position = "top",
             axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
             axis.text.y = element_text(size = 12),
             axis.title = element_text(face = "bold", size = 14),
-            legend.text = element_text(face = "bold", size = 14),
-            legend.title = element_text(face = "bold", size = 14),
+            legend.text = element_text(face = "bold", size = 14, hjust = 0.5),
+            legend.title = element_text(face = "bold", size = 14, hjust = 0.5),
             strip.text = element_text(face = "bold", size = 12))
+      # scale_fill_discrete(guide = guide_legend(title.position = "top"))
     return(plot)
   })
 
