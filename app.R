@@ -4,56 +4,12 @@ library(shinyWidgets)
 library(tidyverse)
 library(viridis)
 
-all_data <- read.csv("data_shiny.csv")
-
-dropdown_choices <- list(
-  `demographics & counterbalancing` = list(`Age (Months)` = "ageMonths",
-                                           Gender = "gender",
-                                           `Experimental Order (Presented First)` = "expt_order"),
-  `executive function` = list(`Backward Digit Span` = "bds"),
-  `second-order theory of mind` = list(`Second-Order ToM (Total)` = "tom_2orderTotal",
-                                        `Second-Order Belief (Total)` = "tom_2orderBelief",
-                                        `Birthday Puppy Knowledge-Perception` = "tomS_mumKnowSopSaw",
-                                        `Birthday Puppy Belief-Belief` = "tomS_mumThinkSopTell",
-                                        `Three Goals Knowledge-Desire 1 & 2` = "tomR_KnowWant",
-                                        `Three Goals Belief-Knowledge` = "tomR_dadSayRobKnow",
-                                        `Three Goals Belief-Belief` = "tomR_dadSayRobThink"),
-  `sentential complements` = list(`Sentential Complements (Total)` = "SC_total",
-                               `Sentential Complements (Think)` = "SC_thinkTotal",
-                               `Sentential Complements (Say)` = "SC_sayTotal")
-)
-
-continuous_vars <- c("ageMonths", "bds", "tom_2orderTotal", "tom_2orderBelief", "tomR_KnowWant",
-                     "SC_total", "SC_thinkTotal", "SC_sayTotal")
-
-sidebarPanel2 <- function (..., out = NULL, width = 4) 
-{
-  div(class = paste0("col-sm-", width), 
-      tags$form(class = "well", ...),
-      out
-  )
-}
+source("helpers.R")
 
 # application UI ----
 ui <- tagList(
   tags$head(
-    tags$style(HTML(
-      "html {
-             position: relative;
-             min-height: 100%;
-           }
-           body {
-             margin-bottom: 30px; /* Margin bottom by footer height */
-           }
-           .footer {
-             position: absolute;
-             bottom: 0;
-             width: 97%;
-             height: 30px; /* Set the fixed height of the footer here */
-             text-align: right;
-             padding-top: 10px;
-             font-size: 90%;
-           }")),
+    tags$link(rel = "stylesheet", type = "text/css", href = "main.css"),
     tags$link(
       rel = "stylesheet",
       href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css",
@@ -62,183 +18,175 @@ ui <- tagList(
   ),
   
   fluidPage(
-  
-  # title panel ----
-  titlePanel(
-    windowTitle = "Detecting Lies Through Others' Eyes",
-    tags$div(
-      style = "text-align: center; padding-bottom: 10px",
-      tags$h1(
-        style = "margin-bottom: 0px;",
-        "Detecting Lies Through Others' Eyes:"
+    # title panel ----
+    titlePanel(
+      windowTitle = "Detecting Lies Through Others' Eyes",
+      tags$div(
+        class = "title-text",
+        tags$h1("Detecting Lies Through Others' Eyes:"),
+        tags$span(
+          class = "subtitle-text",
+          "an interactive data visualization accompaniment to",
+          tags$a(
+            "Tay et al. (2024)",
+            href = "https://doi.org/10.1016/j.jecp.2024.105863"
+          )
         ),
-      tags$span(
-        style = "font-weight: normal; font-size: 80%",
-        "an interactive data visualization accompaniment to",
-        tags$a(
-          "Tay et al. (2024)",
-          href="https://doi.org/10.1016/j.jecp.2024.105863"
-        )
-      )
-    )
-  ),
-  
-  # body ----
-  sidebarLayout(
-    
-    # sidebar panel ----
-    sidebarPanel2(
-      
-      # both
-      radioGroupButtons(
-        inputId = "tabName",
-        label = "Choose a plot:",
-        choices = c("Experiment", "Covariates"),
-        checkIcon = list(
-          yes = icon("ok", 
-                     lib = "glyphicon")),
-        status = "primary",
-        justified = TRUE
-      ),
-      hr(),
-      conditionalPanel(
-        condition = "input.tabName == 'Experiment'",
-        materialSwitch(
-          inputId = "showMethod",
-          label = HTML("<b>Show experimental design:</b>"), 
-          value = F,
-          status = "primary"
-        )
-      ),
-      pickerInput(
-        inputId = "x_axis",
-        label = "Select x-axis variable:", 
-        choices = dropdown_choices,
-        selected = "ageMonths"
-      ),
-      
-      # experiment
-      
-      conditionalPanel(
-        condition = 'input.tabName == "Experiment" && ["ageMonths","bds","tom_2orderTotal","tom_2orderBelief",
-        "tomR_KnowWant","SC_total","SC_thinkTotal","SC_sayTotal"].includes(input.x_axis)',
-        sliderTextInput(
-          inputId = "x_breaks",
-          label = "Select number of bins:",
-          selected = 5,
-          choices = seq(2, 7, 1),
-          grid = T
-        )
-      ),
-      
-      # covariates
-      conditionalPanel(
-        condition = "input.tabName == 'Covariates'",
-        pickerInput(
-          inputId = "y_axis",
-          label = "Select y-axis variable:",
-          choices = dropdown_choices,
-          selected = "tom_2orderTotal"
-        )
-      ),
-      conditionalPanel(
-        condition = 'input.tabName == "Covariates" &&
-        ["ageMonths","bds","tom_2orderTotal","tom_2orderBelief","tomR_KnowWant",
-        "SC_total","SC_thinkTotal","SC_sayTotal"].includes(input.x_axis) &&
-        ["ageMonths","bds","tom_2orderTotal","tom_2orderBelief","tomR_KnowWant",
-        "SC_total","SC_thinkTotal","SC_sayTotal"].includes(input.y_axis)',
-        pickerInput(
-          inputId = "fill_colour",
-          label = "Select colour/fill variable:",
-          choices = dropdown_choices,
-          selected = "bds"
-        )
-      ),
-      out = tags$div(
-        style = "font-size: 90%; text-indent: -30px; padding-left: 35px; padding-right: 5px;",
-        tags$strong("Reference:"),
-        tags$p(
-          "Tay, C., Ng, R., Ye, N. N., & Ding, X. P. (2024). Detecting lies through others’ eyes: Children use perceptual access cues to evaluate listeners’ beliefs about informants’ deception.",
-          tags$em("Journal of Experimental Child Psychology, 241,"),
-          "105863.",
-          tags$a("https://doi.org/10.1016/j.jecp.2024.105863",
-               href = "https://doi.org/10.1016/j.jecp.2024.105863")
-        )
+        hr()
       )
     ),
     
-    # main panel ----
-    mainPanel(
+    # body ----
+    sidebarLayout(
       
-      tabsetPanel(
-        id = "tabShown",
-        type = "hidden",
+      # sidebar panel ----
+      sidebarPanel2(
         
-        # experiment tab ----
-        tabPanel(
-          "Experiment",
+        # both
+        radioGroupButtons(
+          inputId = "tabName",
+          label = "Choose a plot:",
+          choices = c("Experiment", "Covariates"),
+          checkIcon = list(
+            yes = icon("ok", 
+                       lib = "glyphicon")),
+          status = "primary",
+          justified = TRUE
+        ),
+        hr(),
+        conditionalPanel(
+          condition = "input.tabName == 'Experiment'",
+          materialSwitch(
+            inputId = "showMethod",
+            label = strong("Show experimental design:"), 
+            value = F,
+            status = "primary"
+          )
+        ),
+        pickerInput(
+          inputId = "x_axis",
+          label = "Select x-axis variable:", 
+          choices = dropdown_choices,
+          selected = "ageMonths"
+        ),
+        
+        # experiment
+        
+        conditionalPanel(
+          condition = 'input.tabName == "Experiment" && ["ageMonths","bds","tom_2orderTotal","tom_2orderBelief",
+          "tomR_KnowWant","SC_total","SC_thinkTotal","SC_sayTotal"].includes(input.x_axis)',
+          sliderTextInput(
+            inputId = "x_breaks",
+            label = "Select number of bins:",
+            selected = 5,
+            choices = seq(2, 7, 1),
+            grid = T
+          )
+        ),
+        
+        # covariates
+        conditionalPanel(
+          condition = "input.tabName == 'Covariates'",
+          pickerInput(
+            inputId = "y_axis",
+            label = "Select y-axis variable:",
+            choices = dropdown_choices,
+            selected = "tom_2orderTotal"
+          )
+        ),
+        conditionalPanel(
+          condition = 'input.tabName == "Covariates" &&
+          ["ageMonths","bds","tom_2orderTotal","tom_2orderBelief","tomR_KnowWant",
+          "SC_total","SC_thinkTotal","SC_sayTotal"].includes(input.x_axis) &&
+          ["ageMonths","bds","tom_2orderTotal","tom_2orderBelief","tomR_KnowWant",
+          "SC_total","SC_thinkTotal","SC_sayTotal"].includes(input.y_axis)',
+          pickerInput(
+            inputId = "fill_colour",
+            label = "Select colour/fill variable:",
+            choices = dropdown_choices,
+            selected = "bds"
+          )
+        ),
+        out = tags$div(
+          class = "apa-citation",
+          tags$strong("Reference:"),
+          tags$p(
+            "Tay, C., Ng, R., Ye, N. N., & Ding, X. P. (2024). Detecting lies through others’ eyes: Children use perceptual access cues to evaluate listeners’ beliefs about informants’ deception.",
+            tags$em("Journal of Experimental Child Psychology, 241,"),
+            "105863.",
+            tags$a("https://doi.org/10.1016/j.jecp.2024.105863",
+                 href = "https://doi.org/10.1016/j.jecp.2024.105863")
+          )
+        )
+      ),
+      
+      # main panel ----
+      mainPanel(
+        
+        tabsetPanel(
+          id = "tabShown",
+          type = "hidden",
           
-          # method ----
-          conditionalPanel(
-            condition = "input.showMethod == true",
+          # experiment tab ----
+          tabPanel(
+            "Experiment",
+            
+            # method ----
+            conditionalPanel(
+              condition = "input.showMethod == true",
+              tags$div(
+                tags$link(href = "https://mfr.osf.io/static/css/mfr.css", media = "all", rel = "stylesheet"),
+                tags$div(id = "mfrIframe", class = "mfr mfr-file"),
+                tags$script(src = "https://mfr.osf.io/static/js/mfr.js"),
+                tags$script(HTML("
+                  function renderMfr() {
+                    var mfrRender = new mfr.Render(\"mfrIframe\", \"https://mfr.ca-1.osf.io/render?url=https://osf.io/download/45qy7/?direct%26mode=render\");
+                  }
+                  if (window.$) {
+                    renderMfr();
+                  } else {
+                    var jq = document.createElement('script');
+                    document.head.appendChild(jq);
+                    jq.onload = function() {
+                      renderMfr();
+                    }
+                    jq.src = 'http://code.jquery.com/jquery-1.11.2.min.js';
+                  }
+                "))
+              ),
+              hr()
+            ),
+            # plot ----
             tags$div(
-              tags$style(HTML("
-              .embed-responsive {
-                position:relative;
-                height:100%;
-              }
-              .embed-responsive iframe {
-                position:absolute;
-                height:100%;
-              }
-            ")),
-              tags$link(href = "https://mfr.osf.io/static/css/mfr.css", media = "all", rel = "stylesheet"),
-              tags$div(id = "mfrIframe", class = "mfr mfr-file"),
-              tags$script(src = "https://mfr.osf.io/static/js/mfr.js"),
-              tags$script(HTML("
-            function renderMfr() {
-              var mfrRender = new mfr.Render(\"mfrIframe\", \"https://mfr.ca-1.osf.io/render?url=https://osf.io/download/45qy7/?direct%26mode=render\");
-            }
-            if (window.$) {
-              renderMfr();
-            } else {
-              var jq = document.createElement('script');
-              document.head.appendChild(jq);
-              jq.onload = function() {
-                renderMfr();
-              }
-              jq.src = 'http://code.jquery.com/jquery-1.11.2.min.js';
-            }
-          "))
-            )
+              class = "question-text",
+              "Children's responses to the target question: ",
+              em('"Does [the receiver] think that [the informant] is lying or telling the truth?"')
+            ),
+            tags$div(
+              class = "response-options",
+              tags$span(class = "option-lie"),
+              tags$span("Lie"),
+              tags$span(class = "option-truth"),
+              tags$span("Truth")
+            ),
+            plotOutput("exptPlot"),
           ),
-          # plot ----
-          plotOutput("exptPlot"),
-        ),
-        
-        # covariates tab ----
-        tabPanel(
-          "Covariates",
-          plotOutput("covariatePlot")
+          
+          # covariates tab ----
+          tabPanel(
+            "Covariates",
+            plotOutput("covariatePlot")
+          )
         )
-        
       )
-    )
-  ),
-  tags$footer(
-    HTML("<i>Last updated: Feb '24 | R Shiny Code:</i>&nbsp;"),
-    a(
-      href = "https://github.com/cleotayzq/jecp-tay2024",
-      target = "_blank",
-      HTML('<i class="fab fa-github"></i>')
     ),
-    class = "footer"
+    tags$footer(
+      tags$em("Last updated: Feb '24 | Built in R Shiny by "),
+      tags$a("Cleo Tay", href = "https://cleotayzq.github.io"),
+    )
   )
-  
-)
 )
     
-
 # application server logic ----
 server <- function(input, output, session) {
   
@@ -350,14 +298,14 @@ server <- function(input, output, session) {
                  label.size = NA, show.legend = F) +
       scale_y_continuous(name = "Proportion", labels = function(x) paste0(x*100, "%")) +
       theme_bw() +
-      labs(fill = stringr::str_wrap("Does [the receiver] think that\n[the informant] is lying or telling the truth?\n")) +
+      # labs(fill = stringr::str_wrap("Does [the receiver] think that [the informant] is lying or telling the truth?")) +
       xlab(x_axis_label()) +
-      theme(legend.position = "top",
+      theme(legend.position = "none",
             axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
             axis.text.y = element_text(size = 12),
             axis.title = element_text(face = "bold", size = 14),
-            legend.text = element_text(face = "bold", size = 14, hjust = 0.5),
-            legend.title = element_text(face = "bold", size = 14, hjust = 0.5),
+            # legend.text = element_text(face = "bold", size = 14, hjust = 0.5),
+            # legend.title = element_blank(),
             strip.text = element_text(face = "bold", size = 12))
       # scale_fill_discrete(guide = guide_legend(title.position = "top"))
     return(plot)

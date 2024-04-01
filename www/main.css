@@ -1,0 +1,88 @@
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 30px;
+}
+
+h1 {
+  margin-bottom: 0px;
+}
+
+.title-text {
+  text-align: center;
+}
+
+.subtitle-text {
+  font-weight: normal;
+  font-size: 80%;
+}
+
+.apa-citation {
+  font-size: 90%;
+  text-indent: -30px;
+  padding-left: 35px;
+  padding-right: 5px;
+}
+
+.embed-responsive {
+  position: relative;
+  height: 100%;
+}
+
+.embed-responsive iframe {
+  position: absolute;
+  height: 100%;
+}
+
+.question-text {
+  text-align: center;
+  font-weight: bold;
+  padding-bottom: 0.5em;
+}
+
+.response-options {
+  text-align: center;
+  flex-direction: row;
+  align-items: center;
+  padding-bottom: 0.5em;
+}
+
+.option-lie {
+  background-color: #F8766D;
+  height: 0.9em;
+  width: 0.9em;
+  display: inline-block;
+  margin-right: 0.2em;
+  border: 1px solid black;
+}
+
+.option-truth {
+  background-color: #00BFC4;
+  height: 0.9em;
+  width: 0.9em;
+  display: inline-block;
+  margin-left: 0.2em;
+  margin-right: 0.2em;
+  border: 1px solid black;
+}
+
+.lie {
+  background-color: #F8766D;
+}
+
+.truth {
+  background-color: #00BFC4;
+}
+
+footer {
+  position: absolute;
+  bottom: 0;
+  width: 97%;
+  height: 30px;
+  text-align: right;
+  padding-top: 10px;
+  font-size: 90%;
+}
